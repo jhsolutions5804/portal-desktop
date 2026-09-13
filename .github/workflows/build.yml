@@ -1,0 +1,47 @@
+name: Build JH Portal Desktop App
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "체크하면 빌드 후 직원용 다운로드 링크(Release)까지 생성됩니다. 체크 해제 시 본인만 확인 가능한 빌드 결과만 생성됩니다."
+        type: boolean
+        default: false
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Tauri CLI
+        run: npm install -g @tauri-apps/cli
+
+      - name: Build
+        run: tauri build
+
+      - name: Upload private build artifact (본인 확인용)
+        uses: actions/upload-artifact@v4
+        with:
+          name: jh-portal-windows
+          path: |
+            src-tauri/target/release/bundle/nsis/*.exe
+            src-tauri/target/release/bundle/msi/*.msi
+
+      - name: Create Release for staff download (배포용)
+        if: ${{ inputs.publish }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          name: JH Portal v${{ github.run_number }}
+          files: |
+            src-tauri/target/release/bundle/nsis/*.exe
+            src-tauri/target/release/bundle/msi/*.msi
