@@ -7,7 +7,20 @@
     "frontendDist": "../dist"
   },
   "app": {
-    "windows": [],
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "JH Portal",
+        "url": "https://portal.jhsol.kr",
+        "width": 1400,
+        "height": 900,
+        "minWidth": 1024,
+        "minHeight": 700,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
     "security": {
       "csp": null
     }
