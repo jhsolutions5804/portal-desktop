@@ -60,16 +60,50 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - name: Diagnostics
+        run: |
+          {
+            echo "== env =="
+            echo "ANDROID_HOME=$ANDROID_HOME"
+            echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+            echo "JAVA_HOME=$JAVA_HOME"
+            echo "which sdkmanager: $(which sdkmanager || echo NOTFOUND)"
+            echo "sdkmanager version:"
+            sdkmanager --version || echo "sdkmanager --version FAILED"
+            echo "== sdk root listing =="
+            ls -la "$ANDROID_SDK_ROOT" || echo "no ANDROID_SDK_ROOT dir"
+          } > android-debug.log 2>&1 || true
+          cat android-debug.log
+
       - name: Accept Android SDK licenses
-        run: yes | sdkmanager --licenses || true
+        run: |
+          (yes | sdkmanager --licenses) >> android-debug.log 2>&1 || true
+          cat android-debug.log
 
       - name: Install Android NDK
-        run: sdkmanager --install "ndk;27.0.12077973"
+        run: |
+          sdkmanager --install "ndk;25.2.9519653" >> android-debug.log 2>&1
+          echo "NDK install exit=$?" >> android-debug.log
+
+      - name: Upload debug log (항상 업로드)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-debug-log
+          path: android-debug.log
+
+      - name: Upload debug log to Release (항상, 확인용)
+        if: always()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-debug
+          name: Android build debug log
+          files: android-debug.log
 
       - name: Set NDK env vars
         run: |
-          echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/27.0.12077973" >> "$GITHUB_ENV"
-          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/27.0.12077973" >> "$GITHUB_ENV"
+          echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> "$GITHUB_ENV"
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
