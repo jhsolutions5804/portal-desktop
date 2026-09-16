@@ -1,8 +1,12 @@
 [package]
 name = "jh-portal"
 version = "1.0.0"
-description = "JH Solutions internal portal desktop wrapper"
+description = "JH Solutions internal portal desktop/mobile wrapper"
 edition = "2021"
+
+[lib]
+name = "jh_portal_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
