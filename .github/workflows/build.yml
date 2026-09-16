@@ -111,14 +111,14 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Tauri CLI
-        run: npm install -g @tauri-apps/cli
+      - name: Install Tauri CLI (local, Gradle이 node_modules에서 찾음)
+        run: npm install
 
       - name: Init Android project
-        run: tauri android init >> android-debug.log 2>&1
+        run: npx tauri android init >> android-debug.log 2>&1
 
       - name: Build APK (debug-signed)
-        run: tauri android build --debug --apk >> android-debug.log 2>&1
+        run: npx tauri android build --debug --apk >> android-debug.log 2>&1
 
       - name: Upload private build artifact (본인 확인용)
         uses: actions/upload-artifact@v4
