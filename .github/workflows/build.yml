@@ -130,11 +130,17 @@ jobs:
       - name: Build APK (release, signed)
         run: npx tauri android build --apk >> android-debug.log 2>&1
 
+      - name: List APK outputs (진단)
+        run: |
+          echo "== apk outputs ==" >> android-debug.log
+          find src-tauri/gen/android/app/build/outputs/apk -type f -name "*.apk" -exec ls -la {} \; >> android-debug.log 2>&1
+          cat android-debug.log | tail -30
+
       - name: Upload private build artifact (본인 확인용)
         uses: actions/upload-artifact@v4
         with:
           name: jh-portal-android
-          path: src-tauri/gen/android/app/build/outputs/apk/**/*.apk
+          path: src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk
 
       - name: Create Release for staff download (배포용)
         if: ${{ inputs.publish }}
@@ -142,7 +148,7 @@ jobs:
         with:
           tag_name: v${{ github.run_number }}-android
           name: JH Portal Android v${{ github.run_number }}
-          files: src-tauri/gen/android/app/build/outputs/apk/**/*.apk
+          files: src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk
 
       - name: Upload debug log (항상 업로드)
         if: always()
