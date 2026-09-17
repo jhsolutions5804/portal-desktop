@@ -117,8 +117,18 @@ jobs:
       - name: Init Android project
         run: npx tauri android init >> android-debug.log 2>&1
 
-      - name: Build APK (debug-signed)
-        run: npx tauri android build --debug --apk >> android-debug.log 2>&1
+      - name: Configure release signing
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > src-tauri/gen/android/app/upload-keystore.jks
+          cat > src-tauri/gen/android/keystore.properties << KSEOF
+          storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+          storeFile=upload-keystore.jks
+          KSEOF
+
+      - name: Build APK (release, signed)
+        run: npx tauri android build --apk >> android-debug.log 2>&1
 
       - name: Upload private build artifact (본인 확인용)
         uses: actions/upload-artifact@v4
