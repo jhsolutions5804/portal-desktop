@@ -119,14 +119,17 @@ jobs:
 
       - name: Configure release signing
         run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > /home/runner/jh-portal-release.jks
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > src-tauri/gen/android/app/jh-portal-release.jks
+          cat > src-tauri/gen/android/keystore.properties << KSEOF
+          storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+          storeFile=jh-portal-release.jks
+          KSEOF
+          python3 .github/scripts/patch_gradle_signing.py
+          cat src-tauri/gen/android/app/build.gradle.kts >> android-debug.log
 
       - name: Build APK (release, signed)
-        env:
-          TAURI_SIGNING_ANDROID_KEY_STORE: /home/runner/jh-portal-release.jks
-          TAURI_SIGNING_ANDROID_KEY_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          TAURI_SIGNING_ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          TAURI_SIGNING_ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: npx tauri android build --apk >> android-debug.log 2>&1
 
       - name: List APK outputs (진단)
