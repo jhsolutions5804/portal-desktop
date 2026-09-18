@@ -106,11 +106,43 @@ fn setup_desktop(app: &tauri::App) -> tauri::Result<()> {
     Ok(())
 }
 
+const ERROR_OVERLAY_SCRIPT: &str = r#"
+(function () {
+    function showOverlay(msg) {
+        try {
+            var el = document.getElementById('__jh_debug_overlay');
+            if (!el) {
+                el = document.createElement('div');
+                el.id = '__jh_debug_overlay';
+                el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999999;background:#fff3cd;color:#7a5900;font-size:12px;padding:10px;white-space:pre-wrap;word-break:break-all;border-bottom:3px solid #e0a800;max-height:60vh;overflow:auto;font-family:monospace;';
+                document.documentElement.appendChild(el);
+            }
+            el.textContent += msg + "\n\n";
+        } catch (e) {}
+    }
+    window.addEventListener('error', function (e) {
+        showOverlay('[error] ' + (e.message || e) + ' @ ' + (e.filename || '') + ':' + (e.lineno || '') );
+    });
+    window.addEventListener('unhandledrejection', function (e) {
+        showOverlay('[promise] ' + (e.reason && (e.reason.stack || e.reason.message || e.reason)));
+    });
+    setTimeout(function () {
+        if (document.body && document.body.innerText.trim().length < 5) {
+            showOverlay('[diag] 5초 후에도 화면 내용이 거의 비어있음 (body 텍스트 길이: ' + (document.body ? document.body.innerText.length : 'no body') + ')');
+        }
+    }, 5000);
+})();
+"#;
+
 #[cfg(mobile)]
-fn setup_mobile(_app: &tauri::App) -> tauri::Result<()> {
+fn setup_mobile(app: &tauri::App) -> tauri::Result<()> {
+    use tauri::Manager;
     // 모바일은 tauri.android.conf.json / tauri.ios.conf.json 에 선언된
     // windows 설정으로 Tauri가 자동으로 메인 창을 생성합니다.
-    // (여기서 직접 만들면 이중 생성 충돌로 검은 화면이 뜨는 문제가 있었습니다.)
+    // 여기서는 그 창에 진단용 오류 오버레이 스크립트만 주입합니다.
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.eval(ERROR_OVERLAY_SCRIPT);
+    }
     Ok(())
 }
 
