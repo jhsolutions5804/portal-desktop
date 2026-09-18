@@ -1,8 +1,40 @@
 <!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><title>Test</title></head>
-<body style="margin:0;padding:40px;background:#ffcc00;">
-<h1 style="color:#000;font-size:32px;">TEST OK</h1>
-<p style="color:#000;font-size:18px;">이 화면이 보이면 웹뷰 자체는 정상입니다.</p>
+<head><meta charset="utf-8"><title>연결 진단</title></head>
+<body style="margin:0;padding:24px;background:#fff;font-family:sans-serif;">
+<h2 style="color:#1D5BA6;">🔍 포털 연결 진단</h2>
+<div id="status" style="white-space:pre-wrap;font-size:15px;color:#222;line-height:1.6;background:#f4f7fb;padding:16px;border-radius:8px;margin-top:16px;"></div>
+<script>
+var statusEl = document.getElementById('status');
+function log(msg) {
+  statusEl.textContent += msg + "\n";
+}
+log('[' + new Date().toLocaleTimeString() + '] 진단 시작');
+log('fetch로 portal.jhsol.kr 연결 시도 중...');
+
+var done = false;
+setTimeout(function () {
+  if (!done) log('⚠️ 10초가 지나도 응답 없음 (요청이 멈춰있음)');
+}, 10000);
+
+fetch('https://portal.jhsol.kr/', { mode: 'cors', cache: 'no-store' })
+  .then(function (res) {
+    done = true;
+    log('✅ 응답 받음! status=' + res.status + ' ' + res.statusText);
+    return res.text();
+  })
+  .then(function (text) {
+    log('본문 길이: ' + text.length + ' 글자');
+    log('');
+    log('5초 후 실제 포털 화면으로 이동합니다...');
+    setTimeout(function () { window.location.href = 'https://portal.jhsol.kr'; }, 5000);
+  })
+  .catch(function (err) {
+    done = true;
+    log('❌ fetch 오류 발생!');
+    log('메시지: ' + (err && err.message ? err.message : String(err)));
+    log('타입: ' + (err && err.name ? err.name : 'unknown'));
+  });
+</script>
 </body>
 </html>

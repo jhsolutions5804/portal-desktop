@@ -136,18 +136,13 @@ const ERROR_OVERLAY_SCRIPT: &str = r#"
 
 #[cfg(mobile)]
 fn setup_mobile(app: &tauri::App) -> tauri::Result<()> {
-    // initialization_script는 실제 페이지 스크립트가 실행되기 전에 반드시
-    // 먼저 실행되도록 보장되므로, 오류를 놓치지 않기 위해 수동으로 창을 만들며
-    // 팝업 우회 스크립트와 진단용 오류 오버레이를 함께 주입합니다.
+    // 외부 주소를 곧바로 불러올 때 원인 파악이 어려워, 먼저 로컬 진단 페이지(dist/index.html)를
+    // 띄우고 그 안의 JS(fetch)로 portal.jhsol.kr 연결을 시도해 결과를 화면에 표시합니다.
     let combined_script = format!("{POPUP_OVERRIDE_SCRIPT}\n{ERROR_OVERLAY_SCRIPT}");
-    WebviewWindowBuilder::new(
-        app,
-        "main",
-        WebviewUrl::External("https://portal.jhsol.kr".parse().unwrap()),
-    )
-    .title("JH Portal")
-    .initialization_script(&combined_script)
-    .build()?;
+    WebviewWindowBuilder::new(app, "main", WebviewUrl::App("index.html".into()))
+        .title("JH Portal")
+        .initialization_script(&combined_script)
+        .build()?;
     Ok(())
 }
 
