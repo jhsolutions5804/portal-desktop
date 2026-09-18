@@ -107,17 +107,10 @@ fn setup_desktop(app: &tauri::App) -> tauri::Result<()> {
 }
 
 #[cfg(mobile)]
-fn setup_mobile(app: &tauri::App) -> tauri::Result<()> {
-    // 모바일은 앱마다 저장소가 OS 차원에서 이미 격리되어 있으므로
-    // 데스크톱처럼 세션 폴더를 직접 관리할 필요가 없습니다.
-    WebviewWindowBuilder::new(
-        app,
-        "main",
-        WebviewUrl::External("https://portal.jhsol.kr".parse().unwrap()),
-    )
-    .title("JH Portal")
-    .initialization_script(POPUP_OVERRIDE_SCRIPT)
-    .build()?;
+fn setup_mobile(_app: &tauri::App) -> tauri::Result<()> {
+    // 모바일은 tauri.android.conf.json / tauri.ios.conf.json 에 선언된
+    // windows 설정으로 Tauri가 자동으로 메인 창을 생성합니다.
+    // (여기서 직접 만들면 이중 생성 충돌로 검은 화면이 뜨는 문제가 있었습니다.)
     Ok(())
 }
 
