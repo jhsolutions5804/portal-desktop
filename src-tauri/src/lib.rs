@@ -136,20 +136,18 @@ const ERROR_OVERLAY_SCRIPT: &str = r#"
 
 #[cfg(mobile)]
 fn setup_mobile(app: &tauri::App) -> tauri::Result<()> {
-    use tauri::Manager;
-    // 모바일은 tauri.android.conf.json / tauri.ios.conf.json 에 선언된
-    // windows 설정으로 Tauri가 창을 만드는데, 이 시점(setup)에는 아직
-    // 그 창이 생성되기 전일 수 있습니다. 생성될 때까지 잠시 재시도합니다.
-    let handle = app.handle().clone();
-    std::thread::spawn(move || {
-        for _ in 0..50 {
-            if let Some(window) = handle.get_webview_window("main") {
-                let _ = window.eval(ERROR_OVERLAY_SCRIPT);
-                return;
-            }
-            std::thread::sleep(std::time::Duration::from_millis(200));
-        }
-    });
+    // initialization_script는 실제 페이지 스크립트가 실행되기 전에 반드시
+    // 먼저 실행되도록 보장되므로, 오류를 놓치지 않기 위해 수동으로 창을 만들며
+    // 팝업 우회 스크립트와 진단용 오류 오버레이를 함께 주입합니다.
+    let combined_script = format!("{POPUP_OVERRIDE_SCRIPT}\n{ERROR_OVERLAY_SCRIPT}");
+    WebviewWindowBuilder::new(
+        app,
+        "main",
+        WebviewUrl::External("https://portal.jhsol.kr".parse().unwrap()),
+    )
+    .title("JH Portal")
+    .initialization_script(&combined_script)
+    .build()?;
     Ok(())
 }
 
