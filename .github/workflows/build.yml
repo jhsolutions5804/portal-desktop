@@ -117,6 +117,9 @@ jobs:
       - name: Init Android project
         run: npx tauri android init >> android-debug.log 2>&1
 
+      - name: Generate app icons (회사 로고 반영)
+        run: npx tauri icon src-tauri/icons/source-icon.png >> android-debug.log 2>&1
+
       - name: Configure release signing
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > src-tauri/gen/android/app/jh-portal-release.jks
