@@ -2,7 +2,8 @@
   "app": {
     "windows": [
       {
-        "label": "main"
+        "label": "main",
+        "url": "https://portal.jhsol.kr"
       }
     ]
   }
