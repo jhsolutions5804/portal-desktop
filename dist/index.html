@@ -1,40 +1,31 @@
 <!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><title>연결 진단</title></head>
-<body style="margin:0;padding:24px;background:#fff;font-family:sans-serif;">
-<h2 style="color:#1D5BA6;">🔍 포털 연결 진단</h2>
-<div id="status" style="white-space:pre-wrap;font-size:15px;color:#222;line-height:1.6;background:#f4f7fb;padding:16px;border-radius:8px;margin-top:16px;"></div>
+<head><meta charset="utf-8"><title>Diag</title></head>
+<body style="margin:0;padding:24px;background:#ffcc00;font-family:sans-serif;color:#000;">
+<h2 style="margin:0 0 16px;">네트워크 진단</h2>
+<div id="log" style="font-size:14px;line-height:1.8;white-space:pre-wrap;word-break:break-all;"></div>
 <script>
-var statusEl = document.getElementById('status');
-function log(msg) {
-  statusEl.textContent += msg + "\n";
-}
-log('[' + new Date().toLocaleTimeString() + '] 진단 시작');
-log('fetch로 portal.jhsol.kr 연결 시도 중...');
-
-var done = false;
-setTimeout(function () {
-  if (!done) log('⚠️ 10초가 지나도 응답 없음 (요청이 멈춰있음)');
-}, 10000);
-
-fetch('https://portal.jhsol.kr/', { mode: 'cors', cache: 'no-store' })
-  .then(function (res) {
-    done = true;
-    log('✅ 응답 받음! status=' + res.status + ' ' + res.statusText);
-    return res.text();
-  })
-  .then(function (text) {
-    log('본문 길이: ' + text.length + ' 글자');
-    log('');
-    log('5초 후 실제 포털 화면으로 이동합니다...');
-    setTimeout(function () { window.location.href = 'https://portal.jhsol.kr'; }, 5000);
-  })
-  .catch(function (err) {
-    done = true;
-    log('❌ fetch 오류 발생!');
-    log('메시지: ' + (err && err.message ? err.message : String(err)));
-    log('타입: ' + (err && err.name ? err.name : 'unknown'));
-  });
+  function log(msg) {
+    document.getElementById('log').textContent += msg + "\n";
+  }
+  function testFetch(label, url) {
+    log('[' + label + '] 시작...');
+    const t0 = Date.now();
+    const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('10초 타임아웃')), 10000));
+    return Promise.race([fetch(url, { mode: 'no-cors', cache: 'no-store' }), timeout])
+      .then(() => log('[' + label + '] 성공 (' + (Date.now()-t0) + 'ms)'))
+      .catch(e => log('[' + label + '] 실패: ' + (e && e.message ? e.message : e) + ' (' + (Date.now()-t0) + 'ms)'));
+  }
+  log('User-Agent: ' + navigator.userAgent);
+  log('온라인 상태: ' + navigator.onLine);
+  log('');
+  testFetch('google.com', 'https://www.google.com')
+    .then(() => testFetch('portal.jhsol.kr', 'https://portal.jhsol.kr'))
+    .then(() => {
+      log('');
+      log('5초 후 실제 포털로 이동합니다...');
+      setTimeout(() => { window.location.href = 'https://portal.jhsol.kr'; }, 5000);
+    });
 </script>
 </body>
 </html>
