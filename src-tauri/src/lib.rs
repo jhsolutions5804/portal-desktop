@@ -138,11 +138,18 @@ const ERROR_OVERLAY_SCRIPT: &str = r#"
 fn setup_mobile(app: &tauri::App) -> tauri::Result<()> {
     use tauri::Manager;
     // 모바일은 tauri.android.conf.json / tauri.ios.conf.json 에 선언된
-    // windows 설정으로 Tauri가 자동으로 메인 창을 생성합니다.
-    // 여기서는 그 창에 진단용 오류 오버레이 스크립트만 주입합니다.
-    if let Some(window) = app.get_webview_window("main") {
-        let _ = window.eval(ERROR_OVERLAY_SCRIPT);
-    }
+    // windows 설정으로 Tauri가 창을 만드는데, 이 시점(setup)에는 아직
+    // 그 창이 생성되기 전일 수 있습니다. 생성될 때까지 잠시 재시도합니다.
+    let handle = app.handle().clone();
+    std::thread::spawn(move || {
+        for _ in 0..50 {
+            if let Some(window) = handle.get_webview_window("main") {
+                let _ = window.eval(ERROR_OVERLAY_SCRIPT);
+                return;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(200));
+        }
+    });
     Ok(())
 }
 
